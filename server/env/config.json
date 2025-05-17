@@ -1,0 +1,27 @@
+{
+    "auth": {
+        "wrong_pass": {
+            "max_count": 5,
+            "ban_time": 30
+        }
+    },
+    "database": {
+        "host": "localhost",
+        "port": 3306,
+        "user": "fsmud",
+        "password": "fsmuddb",
+
+        "names": {
+            "auth_db": "fsmud_auth",
+            "char_db": "fsmud_character",
+            "world_db": "fsmud_world"
+        }
+    },
+    "game_options": {
+        "vitality_hp_multiplier": 10
+    },
+    "network": {
+        "listen": "0.0.0.0",
+        "port": "8300"
+    }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "mudtest",
+  "version": "1.0.0",
+  "main": "start.js",
+  "scripts": {
+    "start": "node start.js",
+    "serve": "php -S localhost:5555 -t client"
+  },
+  "author": "Flawedspirit",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "mysql2": "^3.14.1",
+    "ws": "^8.18.2"
+  }
+}

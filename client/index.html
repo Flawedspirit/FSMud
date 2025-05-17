@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="assets/css/cirrus-core.min.css">
+    <link rel="stylesheet" href="assets/css/cirrus.min.css">
+    <title>Login or Register</title>
+</head>
+<body>
+    <div class="hero fullscreen">
+        <div class="hero-body">
+            <div class="content">
+                <h1>Register or Play Now</h1>
+                <div class="row">
+                    <div class="md:col-6">
+                        <div class="card">
+                            <div class="card__header">
+                                <p class="font-bold px-3">Register</p>
+                            </div>
+                            <div class="content">
+                                <form id="register" class="m-3" action="">
+                                    <div class="row level">
+                                        <div class="col-3 level-item">
+                                            <label class="font-bold">Username</label>
+                                        </div>
+                                        <div class="col-9 level-item">
+                                            <input id="register-user" type="text" placeholder="3-20 characters" value="" />
+                                        </div>
+                                    </div>
+                                    <div class="row level">
+                                        <div class="col-3 level-item">
+                                            <label class="font-bold">Password</label>
+                                        </div>
+                                        <div class="col-9 level-item">
+                                            <input id="register-pass" type="password" placeholder="8-32 characters" value="" />
+                                        </div>
+                                    </div>
+                                    <div class="row level">
+                                        <div class="col-3 level-item">
+                                            <label class="font-bold">Confirm Password</label>
+                                        </div>
+                                        <div class="col-9 level-item">
+                                            <input id="register-pass-conf" type="password" placeholder="8-32 characters" value="" />
+                                        </div>
+                                    </div>
+                                    <div class="row level">
+                                        <div class="col-3 level-item">
+                                            <label class="font-bold">Email</label>
+                                        </div>
+                                        <div class="col-9 level-item">
+                                            <input id="register-email" type="email" value="" />
+                                        </div>
+                                    </div>
+                                    <div class="divider"></div>
+                                    <div class="row level">
+                                        <div class="col-3 level-item">
+                                            <label class="font-bold">Race <a href="">(Info)</a></label>
+                                        </div>
+                                        <div class="col-9 level-item">
+                                            <select id="register-race" class="select">
+                                                <option>Human</option>
+                                                <option>Lukhani</option>
+                                                <option>Ka'mush</option>
+                                                <option>Kelikaar</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="row level">
+                                        <div class="col-3 level-item">
+                                            <label class="font-bold">Sex</label>
+                                        </div>
+                                        <div class="col-9 level-item">
+                                            <select id="register-sex" class="select">
+                                                <option>Male</option>
+                                                <option>Female</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <button class="btn-info" type="submit">Register</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="md:col-6">
+                        <div class="card">
+                            <div class="card__header">
+                                <p class="font-bold px-3">Login</p>
+                            </div>
+                            <div class="content">
+                                <form id="login" class="m-3" action="">
+                                    <div class="row">
+                                        <div id="login_messages" class="px-2 bg-red-300 w-100p"></div>
+                                    </div>
+                                    <div class="row level">
+                                        <div class="col-3 level-item">
+                                            <label class="font-bold">Username</label>
+                                        </div>
+                                        <div class="col-9 level-item">
+                                            <input id="login-user" type="text" value="" />
+                                        </div>
+                                    </div>
+                                    <div class="row level">
+                                        <div class="col-3 level-item">
+                                            <label class="font-bold">Password</label>
+                                        </div>
+                                        <div class="col-9 level-item">
+                                            <input id="login-pass" type="password" value="" />
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <button class="btn-success" type="submit">Login</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript" src="assets/js/jquery-3.7.1.min.js"></script>
+    <script type="text/javascript">const jq = jQuery;</script>
+
+    <script type="text/javascript" src="core/Config.js"></script>
+    <script type="text/javascript" src="core/Core.js"></script>
+    <script type="text/javascript" src="core/Login.js"></script>
+    <script type="text/javascript" src="core/Packet.js"></script>
+</body>
+</html>
