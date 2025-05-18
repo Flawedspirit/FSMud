@@ -59,8 +59,8 @@ module.exports = {
 
                     // Create a new player object and add to the registry of
                     // players in server memory
-
                     const currentChar = {
+                        id: acct.UUID,
                         name: acct.username,
                         race: Race.getRaceName(character[0].race),
                         sex: character[0].sex,

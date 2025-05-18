@@ -4,7 +4,9 @@
   "main": "start.js",
   "scripts": {
     "start": "node start.js",
-    "serve": "php -S localhost:5555 -t client"
+    "serve": "php -S localhost:5555 -t client",
+    "sass:dev": "sass --watch --update --style=expanded client/assets/scss:client/assets/css",
+    "sass:prod": "sass --no-source-map --style=compressed client/assets/scss:client/assets/css"
   },
   "author": "Flawedspirit",
   "license": "ISC",
@@ -13,5 +15,8 @@
     "bcrypt": "^5.1.1",
     "mysql2": "^3.14.1",
     "ws": "^8.18.2"
+  },
+  "devDependencies": {
+    "sass": "^1.89.0"
   }
 }

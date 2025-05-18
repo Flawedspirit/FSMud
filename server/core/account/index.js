@@ -328,6 +328,7 @@ module.exports = {
                             const character = await Database.getAllRows(Config.get('database.names.char_db'), 'character');
                             const skills = await Database.getAllRows(Config.get('database.names.char_db'), 'character_skills');
                             const gameState = {
+                                id: account.UUID,
                                 name: account.username,
                                 race: Race.getRaceName(character[0].race),
                                 sex: character[0].sex,
