@@ -1,0 +1,10 @@
+body {
+  background-image: url("/assets/images/background.png");
+  background-color: #001429;
+}
+
+.table-transparent {
+  --bs-table-bg: transparent;
+}
+
+/*# sourceMappingURL=game.css.map */
