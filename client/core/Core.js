@@ -1,6 +1,6 @@
 window.config = new Config();
 
-jq(document).ready(async () => {
+$(document).ready(async () => {
     // Load game client configuration
     await config.loadConfig();
 
@@ -26,22 +26,24 @@ jq(document).ready(async () => {
     }
 
     currentState = JSON.parse(sessionStorage.getItem('current_state'));
-    const username = currentState.name;
-    const level = currentState.level;
-    const race = currentState.race;
-    const strength = currentState.attributes.strength;
-    const vitality = currentState.attributes.vitality;
-    const agility = currentState.attributes.agility;
-    const willpower = currentState.attributes.willpower;
-    const perception = currentState.attributes.perception;
+    if(currentState) {
+        const username = currentState.name;
+        const level = currentState.level;
+        const race = currentState.race;
+        const strength = currentState.attributes.strength;
+        const vitality = currentState.attributes.vitality;
+        const agility = currentState.attributes.agility;
+        const willpower = currentState.attributes.willpower;
+        const perception = currentState.attributes.perception;
 
-    $('#loggedInUser').text(username);
-    $('#player__name').text(username);
-    $('#player__level').text(level);
-    $('#player__race').text(race);
-    $('#player__str').text(strength);
-    $('#player__vit').text(vitality);
-    $('#player__agi').text(agility);
-    $('#player__wil').text(willpower);
-    $('#player__per').text(perception);
+        $('#loggedInUser').text(username);
+        $('#player__name').text(username);
+        $('#player__level').text(level);
+        $('#player__race').text(race);
+        $('#player__str').text(strength);
+        $('#player__vit').text(vitality);
+        $('#player__agi').text(agility);
+        $('#player__wil').text(willpower);
+        $('#player__per').text(perception);
+    }
 });

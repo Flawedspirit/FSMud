@@ -25,6 +25,7 @@ $(document).on('submit', async (event) => {
 
         if(response.data.success) {
             $('#login_messages').empty();
+            $('#login_messages').addClass('d-none');
             sessionStorage.setItem('session_key', response.data.message[0]);
             sessionStorage.setItem('current_state', JSON.stringify(response.data.message[1]));
             loginSocket.close();
@@ -32,14 +33,15 @@ $(document).on('submit', async (event) => {
             window.location.href = `${baseDir}${gameWindow}`;
         } else {
             $('#login_messages').empty();
+            $('#login_messages').removeClass('d-none');
             if(response.data.message[0] && response.data.message[0] === 'ACCOUNT_LOCKED') {
-                $('#login_messages').append('<p class="text-red-800">Your account has been disabled for major rule-breaking. You can find the game rules HERE (this will eventually be a link).</p>');
+                $('#login_messages').append('<p class="mb-0">Your account has been disabled for major rule-breaking. You can find the game rules HERE (this will eventually be a link).</p>');
             } else if(response.data.message[0] && response.data.message[0] === 'ACCOUNT_THROTTLED') {
-                $('#login_messages').append(`<p class="text-red-800">Your account is temporarily locked out because of too many invalid login requests. Try again in ${response.data.message[1]} seconds.</p>`);
+                $('#login_messages').append(`<p class="mb-0">Your account is temporarily locked out because of too many invalid login requests. Try again in ${response.data.message[1]} seconds.</p>`);
             } else if(response.data.message[0] && response.data.message[0] === 'IP_LOCKED') {
-                $('#login_messages').append('<p class="text-red-800">Your IP address has been prevented from accessing the game.</p>');
+                $('#login_messages').append('<p class="mb-0">Your IP address has been prevented from accessing the game.</p>');
             } else {
-                $('#login_messages').append('<p class="text-red-800">Unable to log in. Please check that your username and password are correct.</p>');
+                $('#login_messages').append('<p class="mb-0">Unable to log in. Please check that your username and password are correct.</p>');
             }
         }
     }
@@ -47,6 +49,7 @@ $(document).on('submit', async (event) => {
     loginSocket.onerror = (error) => {
         console.log(error);
         $('#login_messages').empty();
-        $('#login_messages').append('<p class="text-red-800">Unable to reach login server. Please try again later.</p>');
+        $('#login_messages').removeClass('d-none');
+        $('#login_messages').append('<p class="mb-0">Unable to reach login server. Please try again later.</p>');
     }
 });

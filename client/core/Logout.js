@@ -1,4 +1,4 @@
-jq(document).on('click', '#logout', async () => {
+$(document).on('click', '#logout', async () => {
     const logoutSocket = new WebSocket(`ws://${await config.get('host')}:${await config.get('port')}`);
     const sessionKey = localStorage.getItem('session_key');
     const loginWindow = '/index.html';
