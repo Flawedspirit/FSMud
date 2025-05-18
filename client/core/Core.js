@@ -45,5 +45,16 @@ $(document).ready(async () => {
         $('#player__agi').text(agility);
         $('#player__wil').text(willpower);
         $('#player__per').text(perception);
+
+        const permissionLevel = currentState.permissions;
+        console.log(permissionLevel);
+        switch(parseInt(permissionLevel)) {
+            case 2:
+                $('#player__name').addClass('is-admin');
+                break;
+            case 1:
+                $('#player__name').addClass('is-mod');
+                break;
+        }
     }
 });

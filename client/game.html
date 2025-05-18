@@ -9,17 +9,17 @@
     <title>Game Test</title>
 </head>
 <body>
-    <div class="container">
+    <div class="container-fluid">
         <div class="row py-1 mb-3">
             <div class="col d-flex align-items-center">
                 <span class="fs-4 align-middle">Welcome!</span>
             </div>
             <div class="col d-flex align-items-center justify-content-end">
-                <p class="mb-0">Logged in as <span id="loggedInUser" class="fw-semibold">{username}</span><button id="logout" class="btn btn-sm btn-danger ms-3">Logout</button></p>
+                <span class="mb-0">Logged in as&nbsp;</span><span id="loggedInUser" class="fw-semibold">{username}</span><button id="logout" class="btn btn-sm btn-danger ms-3">Logout</button>
             </div>
         </div>
         <div class="row">
-            <div class="col">
+            <div class="col-3">
                 <table class="table table-transparent table-borderless table-sm">
                     <thead>
                         <tr><th colspan="2"><span id="player__name" class="fs-4">{username}</span></th></tr>
@@ -49,8 +49,8 @@
                     </tbody>
                 </table>
             </div>
-            <div class="col"></div>
-            <div class="col"></div>
+            <div class="col-6"></div>
+            <div class="col-3"></div>
         </div>
     </div>
 

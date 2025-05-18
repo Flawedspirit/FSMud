@@ -1,10 +1,28 @@
 body {
   background-image: url("/assets/images/background.png");
-  background-color: #001429;
+  background-color: #00070a;
 }
 
 .table-transparent {
   --bs-table-bg: transparent;
+}
+
+.is-admin {
+  color: #dc3545;
+
+  &::before {
+    content: url("/assets/images/admin-crown.gif");
+    margin-right: 4px;
+  }
+}
+
+.is-mod {
+  color: #2196f3;
+
+  &::before {
+    content: url("/assets/images/mod-crown.gif");
+    margin-right: 4px;
+  }
 }
 
 /*# sourceMappingURL=game.css.map */
