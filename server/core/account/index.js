@@ -325,35 +325,34 @@ module.exports = {
                             });
 
                             // Send initial character state to the player when logged in
-                            const character = await Database.getAllRows(Config.get('database.names.char_db'), 'character');
-                            const skills = await Database.getAllRows(Config.get('database.names.char_db'), 'character_skills');
+                            const character = await Database.get(Config.get('database.names.char_db'), 'character', 'UUID', account.UUID);
+                            const skills = await Database.get(Config.get('database.names.char_db'), 'character_skills', 'UUID', account.UUID);
                             const gameState = {
                                 id: account.UUID,
                                 name: account.username,
-                                race: Race.getRaceName(character[0].race),
-                                sex: character[0].sex,
-                                health: character[0].health,
+                                race: Race.getRaceName(character.race),
+                                sex: character.sex,
+                                health: character.health,
                                 attributes: {
-                                    strength: character[0].strength,
-                                    vitality: character[0].vitality,
-                                    agility: character[0].agility,
-                                    willpower: character[0].willpower,
-                                    perception: character[0].perception
+                                    strength: character.strength,
+                                    vitality: character.vitality,
+                                    agility: character.agility,
+                                    willpower: character.willpower,
+                                    perception: character.perception
                                 },
-                                mapID: character[0].map_id,
-                                mapX: character[0].map_x,
-                                mapY: character[0].map_y,
-                                flags: character[0].flags,
-                                level: character[0].level,
-                                money: character[0].money,
+                                mapID: character.map_id,
+                                mapX: character.map_x,
+                                mapY: character.map_y,
+                                flags: character.flags,
+                                level: character.level,
+                                money: character.money,
                                 skills: {
-                                    cooking: skills[0].cooking,
-                                    herbalism: skills[0].herbalism,
-                                    mining: skills[0].mining,
+                                    cooking: skills.cooking,
+                                    herbalism: skills.herbalism,
+                                    mining: skills.mining,
                                 },
                                 permissions: account.permission
                             }
-
                             return new Packet('REPLY', { success: true, message: [sessionKey, gameState] });
                         } else {
                             // Check if there are already enough invalid login attempts to ban logins
