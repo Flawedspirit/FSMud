@@ -63,50 +63,50 @@ module.exports = {
         }
 
         let health, strength, vitality, agility, willpower, perception;
-        switch(race) {
-            case '0': // Human
+        switch(parseInt(race)) {
+            case 0: // Human
                 strength = 11;
                 vitality = 11;
                 agility = 11;
                 willpower = 11;
                 perception = 11;
                 break;
-            case '1': // Harné (bear-lynx hybrid)
+            case 1: // Harné (bear-lynx hybrid)
                 strength = 11;
                 vitality = 10;
                 agility = 12;
                 willpower = 11;
                 perception = 10;
                 break;
-            case '2': // Lukhani (wolf)
+            case 2: // Lukhani (wolf)
                 strength = 13;
                 vitality = 11;
                 agility = 10;
                 willpower = 10;
                 perception = 10;
                 break;
-            case '3': // Ka'mush (kobold)
+            case 3: // Ka'mush (kobold)
                 strength = 10;
                 vitality = 10;
                 agility = 10;
                 willpower = 13;
                 perception = 11;
                 break;
-            case '4': // Kelikaar (lizard)
+            case 4: // Kelikaar (lizard)
                 strength = 11;
                 vitality = 12;
                 agility = 10;
                 willpower = 11;
                 perception = 10;
                 break;
-            case '5': // Madrani (cat)
+            case 5: // Madrani (cat)
                 strength = 10;
                 vitality = 10;
                 agility = 13;
                 willpower = 10;
                 perception = 11;
                 break;
-            case '6': // Vultani (fox)
+            case 6: // Vultani (fox)
                 strength = 10;
                 vitality = 11;
                 agility = 10;
