@@ -1,6 +1,7 @@
 const readline = require('readline');
 const WebSocket = require('ws');
 const Packet = require('./packet.js');
+const Chat = require('./chat.js');
 const ServerTick = require('./serverTick.js');
 const { Errors, Log } = baseRequire('server/core/tools');
 const Config = baseRequire('server/core/config');
@@ -38,6 +39,10 @@ Event.on('SERVER_READY', () => {
     }, 2000);
 });
 
+Event.on('PLAYER_MESSAGE', async (data, socket) => {
+    Chat.processMessage(data, socket, server);
+});
+
 module.exports = {
     async init() {
         return new Promise((resolve, reject) => {
@@ -61,6 +66,9 @@ module.exports = {
                                 break;
                             case 'LOGOUT':
                                 Event.call('PLAYER_DISCONNECTED', message, socket);
+                                break;
+                            case 'MESSAGE':
+                                Event.call('PLAYER_MESSAGE', message, socket);
                                 break;
                             default:
                                 Log.message(`Unknown packet type: ${message.type}`, 'WARN');

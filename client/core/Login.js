@@ -11,15 +11,10 @@ $(document).on('submit', async (event) => {
     let baseDir = config.get('base_dir');
     if(baseDir === ".") baseDir = "";
 
-    const loginSocket = new WebSocket(`ws://${await config.get('host')}:${await config.get('port')}`);
+    loginMessage = new Packet('LOGIN', { username: username, password: password, ipAddress: ip, locale: 0 });
+    gameSocket.send(loginMessage.toJSON());
 
-    loginSocket.onopen = () => {
-        console.log("Connected!");
-        loginMessage = new Packet('LOGIN', { username: username, password: password, ipAddress: ip, locale: 0 });
-        loginSocket.send(loginMessage.toJSON());
-    };
-
-    loginSocket.onmessage = (event) => {
+    window.gameSocket.onmessage = (event) => {
         const response = Packet.fromJSON(event.data.toString());
         console.log(response);
 
@@ -28,7 +23,6 @@ $(document).on('submit', async (event) => {
             $('#login_messages').addClass('d-none');
             sessionStorage.setItem('session_key', response.data.message[0]);
             sessionStorage.setItem('current_state', JSON.stringify(response.data.message[1]));
-            loginSocket.close();
 
             window.location.href = `${baseDir}${gameWindow}`;
         } else {
@@ -44,12 +38,5 @@ $(document).on('submit', async (event) => {
                 $('#login_messages').append('<p class="mb-0">Unable to log in. Please check that your username and password are correct.</p>');
             }
         }
-    }
-
-    loginSocket.onerror = (error) => {
-        console.log(error);
-        $('#login_messages').empty();
-        $('#login_messages').removeClass('d-none');
-        $('#login_messages').append('<p class="mb-0">Unable to reach login server. Please try again later.</p>');
     }
 });

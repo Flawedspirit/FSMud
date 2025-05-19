@@ -1,28 +1,37 @@
 body {
   background-image: url("/assets/images/background.png");
-  background-color: #00070a;
+  background-color: #001429;
 }
 
-.table-transparent {
-  --bs-table-bg: transparent;
+.chatbox {
+  background-color: var(--bs-body-bg);
+  border: var(--bs-border-width) solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+  display: block;
+  height: 300px;
+  overflow-y: scroll;
 }
 
 .is-admin {
   color: #dc3545;
-
-  &::before {
-    content: url("/assets/images/admin-crown.gif");
-    margin-right: 4px;
-  }
+}
+.is-admin::before {
+  content: url("/assets/images/admin-crown.png");
+  margin-right: 8px;
+  vertical-align: middle;
 }
 
 .is-mod {
-  color: #2196f3;
+  color: #20c997;
+}
+.is-mod::before {
+  content: url("/assets/images/admin-crown.png");
+  margin-right: 8px;
+  vertical-align: middle;
+}
 
-  &::before {
-    content: url("/assets/images/mod-crown.gif");
-    margin-right: 4px;
-  }
+.table-transparent {
+  --bs-table-bg: transparent;
 }
 
 /*# sourceMappingURL=game.css.map */

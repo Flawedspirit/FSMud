@@ -9,7 +9,7 @@
     <title>Game Test</title>
 </head>
 <body>
-    <div class="container-fluid">
+    <div class="container-fluid position-relative vh-100">
         <div class="row py-1 mb-3">
             <div class="col d-flex align-items-center">
                 <span class="fs-4 align-middle">Welcome!</span>
@@ -18,7 +18,7 @@
                 <span class="mb-0">Logged in as&nbsp;</span><span id="loggedInUser" class="fw-semibold">{username}</span><button id="logout" class="btn btn-sm btn-danger ms-3">Logout</button>
             </div>
         </div>
-        <div class="row">
+        <div class="row mb-3">
             <div class="col-3">
                 <table class="table table-transparent table-borderless table-sm">
                     <thead>
@@ -52,6 +52,23 @@
             <div class="col-6"></div>
             <div class="col-3"></div>
         </div>
+        <div class="row position-absolute bottom-0 w-100">
+            <form id="chat">
+                <div class="row mb-3">
+                    <div class="col">
+                        <div id="messageArea" class="chatbox px-3 py-1"></div>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-11">
+                        <input id="chat_in" class="form-control" type="text" value="" />
+                    </div>
+                    <div class="col-md-1">
+                        <button class="btn btn-primary w-100" type="submit">Send</button>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
 
     <script type="text/javascript" src="assets/js/jquery-3.7.1.min.js"></script>
@@ -67,8 +84,9 @@
     </script>
 
     <script type="text/javascript" src="core/Config.js"></script>
-    <script type="text/javascript" src="core/Core.js"></script>
-    <script type="text/javascript" src="core/Logout.js"></script>
     <script type="text/javascript" src="core/Packet.js"></script>
+    <script type="text/javascript" src="core/Core.js"></script>
+    <script type="text/javascript" src="core/Chat.js"></script>
+    <script type="text/javascript" src="core/Logout.js"></script>
 </body>
 </html>

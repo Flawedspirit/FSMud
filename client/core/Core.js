@@ -4,9 +4,27 @@ $(document).ready(async () => {
     // Load game client configuration
     await config.loadConfig();
 
+    window.gameSocket = new WebSocket(`ws://${await config.get('host')}:${await config.get('port')}`);
+
+    window.gameSocket.onopen = () => {
+        console.log("Connected!");
+        $(document).trigger('SOCKET_READY');
+    };
+
+    window.gameSocket.onerror = (error) => {
+        console.log(error);
+        $('#login_messages').empty();
+        $('#login_messages').removeClass('d-none');
+        $('#login_messages').append('<p class="mb-0">Unable to reach login server. Please try again later.</p>');
+    }
+
+    window.gameSocket.onclose = () => {
+        console.log("Closing connection.");
+    }
+
     // Handle session connection
-    const sessionKey = sessionStorage.getItem('session_key');
-    const loggedIn = sessionStorage.getItem('logged_in');
+    window.sessionKey = sessionStorage.getItem('session_key');
+    window.loggedIn = sessionStorage.getItem('logged_in');
     let baseDir = config.get('base_dir');
     if(baseDir === ".") baseDir = "";
 
@@ -25,7 +43,7 @@ $(document).ready(async () => {
         window.location.href = `${baseDir}${gameWindow}`;
     }
 
-    currentState = JSON.parse(sessionStorage.getItem('current_state'));
+    window.currentState = JSON.parse(sessionStorage.getItem('current_state'));
     if(currentState) {
         const username = currentState.name;
         const level = currentState.level;
@@ -47,7 +65,6 @@ $(document).ready(async () => {
         $('#player__per').text(perception);
 
         const permissionLevel = currentState.permissions;
-        console.log(permissionLevel);
         switch(parseInt(permissionLevel)) {
             case 2:
                 $('#player__name').addClass('is-admin');

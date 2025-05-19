@@ -346,6 +346,7 @@ module.exports = {
                                 flags: character.flags,
                                 level: character.level,
                                 money: character.money,
+                                bank_money: character.banked_money,
                                 skills: {
                                     cooking: skills.cooking,
                                     herbalism: skills.herbalism,
