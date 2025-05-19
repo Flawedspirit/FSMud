@@ -2,7 +2,7 @@ $(document).on('SOCKET_READY', () => {
     const message = $('#chat_in');
     const chatArea = $('#messageArea');
 
-    if(window.gameSocket || window.gameSocket.readyState === WebSocket.OPEN) {
+    if(window.gameSocket && window.gameSocket.readyState === WebSocket.OPEN) {
         gameSocket.onmessage = (event) => {
             const data = JSON.parse(event.data);
             const username = data.data.username;

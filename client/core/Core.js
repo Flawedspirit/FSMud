@@ -1,26 +1,30 @@
 window.config = new Config();
 
-$(document).ready(async () => {
-    // Load game client configuration
-    await config.loadConfig();
-
+async function connect() {
     window.gameSocket = new WebSocket(`ws://${await config.get('host')}:${await config.get('port')}`);
 
-    window.gameSocket.onopen = () => {
+    gameSocket.onopen = () => {
         console.log("Connected!");
         $(document).trigger('SOCKET_READY');
     };
 
-    window.gameSocket.onerror = (error) => {
+    gameSocket.onerror = (error) => {
         console.log(error);
         $('#login_messages').empty();
         $('#login_messages').removeClass('d-none');
         $('#login_messages').append('<p class="mb-0">Unable to reach login server. Please try again later.</p>');
     }
 
-    window.gameSocket.onclose = () => {
+    gameSocket.onclose = () => {
         console.log("Closing connection.");
     }
+}
+
+$(document).ready(async () => {
+    // Load game client configuration
+    await config.loadConfig();
+
+    await connect();
 
     // Handle session connection
     window.sessionKey = sessionStorage.getItem('session_key');

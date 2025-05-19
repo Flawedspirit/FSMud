@@ -1,4 +1,4 @@
-$(document).on('submit', async (event) => {
+$('#login').on('submit', async (event) => {
     event.preventDefault();
 
     const username = $('#login-user').val();
@@ -12,9 +12,13 @@ $(document).on('submit', async (event) => {
     if(baseDir === ".") baseDir = "";
 
     loginMessage = new Packet('LOGIN', { username: username, password: password, ipAddress: ip, locale: 0 });
-    gameSocket.send(loginMessage.toJSON());
 
-    window.gameSocket.onmessage = (event) => {
+    await connect();
+    gameSocket.onopen = () => {
+        gameSocket.send(loginMessage.toJSON());
+    }
+
+    gameSocket.onmessage = (event) => {
         const response = Packet.fromJSON(event.data.toString());
         console.log(response);
 
