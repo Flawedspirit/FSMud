@@ -1,12 +1,8 @@
 const WebSocket = require('ws');
 const Packet = require('./packet.js');
-const ServerTick = require('./serverTick.js');
-const { Errors, Log } = baseRequire('server/core/tools');
-const Config = baseRequire('server/core/config');
-const Database = baseRequire('server/core/database');
-const Account = baseRequire('server/core/account');
-const Event = baseRequire('server/core/event');
+const {  Log } = baseRequire('server/core/tools');
 const Registry = baseRequire('server/core/registry');
+const Command = require('./commands');
 
 module.exports = {
     processMessage(message, socket, server) {
@@ -16,12 +12,18 @@ module.exports = {
             sender = Registry.get('players', messageIn.data.sender);
             chatMsg = messageIn.data.message;
 
-            server.clients.forEach((client) => {
-                if(client.readyState === WebSocket.OPEN) {
-                    const response = new Packet('CHAT_REPLY', {username: sender.name, permission: sender.permissions, message: chatMsg}, messageIn.timestamp).toJSON();
-                    client.send(response);
-                }
-            });
+            // Check if message is a command
+            if(chatMsg.substring(0, 1) === '/' || chatMsg.substring(0, 1) === '.') {
+                const command = chatMsg.substring(1);
+                Command.processCommand(socket, command);
+            } else {
+                server.clients.forEach((client) => {
+                    if(client.readyState === WebSocket.OPEN) {
+                        const response = new Packet('CHAT_REPLY', {username: sender.name, permission: sender.permissions, message: chatMsg}, Date.now()).toJSON();
+                        client.send(response);
+                    }
+                });
+            }
         } catch(err) {
             Log.message(err, 'ERROR');
         }

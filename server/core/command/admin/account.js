@@ -24,7 +24,7 @@ module.exports = [
             'delete',
             'uuid'
         ],
-        async execute(command) {
+        async execute(sender, command) {
             // Parse base command
             command = Command.tokensToArray(command);
 
