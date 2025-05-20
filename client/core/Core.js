@@ -9,20 +9,28 @@ async function connect() {
     };
 
     gameSocket.onerror = (error) => {
-        console.log(error);
         $('#login_messages').empty();
         $('#login_messages').removeClass('d-none');
         $('#login_messages').append('<p class="mb-0">Unable to reach login server. Please try again later.</p>');
     }
 
     gameSocket.onclose = () => {
-        console.log("Closing connection.");
+        console.log("Connected closed by server.");
+        if(sessionStorage.getItem('logged_in')) {
+            sessionStorage.removeItem('current_state');
+            sessionStorage.removeItem('logged_in');
+            sessionStorage.removeItem('session_key');
+            window.location.href = `${baseDir}/index.html`;
+        }
     }
 }
 
 $(document).ready(async () => {
     // Load game client configuration
     await config.loadConfig();
+
+    window.baseDir = config.get('base_dir');
+    if(window.baseDir === ".") window.baseDir = "";
 
     await connect();
 
@@ -77,5 +85,16 @@ $(document).ready(async () => {
                 $('#player__name').addClass('is-mod');
                 break;
         }
+    }
+
+    // Automatically scroll chatbox to bottom
+    const chatbox = $('#messageArea')[0];
+
+    if(chatbox) {
+        const observer = new MutationObserver(() => {
+            chatbox.scrollTop = chatbox.scrollHeight;
+        });
+
+        observer.observe(chatbox, { childList: true, subtree: true });
     }
 });

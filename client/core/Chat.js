@@ -6,21 +6,31 @@ $(document).on('SOCKET_READY', () => {
         gameSocket.onmessage = (event) => {
             const data = JSON.parse(event.data);
             const username = data.data.username;
-            const message = data.data.message;
             const permission = data.data.permission;
             const timestamp = data.timestamp;
+            let message = data.data.message;
 
-            let permClass;
-            switch(parseInt(permission)) {
-                case 2:
-                    permClass = 'is-admin';
+            message = message.replace(/(?:\r\n|\r|\n)/g, '<br>');
+
+            switch(data.type) {
+                case 'COMMAND_REPLY':
+                    chatArea.append(`<div id="msg_server_${timestamp}" class="server-message">${message}</div>`);
                     break;
-                case 1:
-                    permClass = 'is-mod';
-                    break;
+                case 'CHAT_REPLY':
+                default:
+                    let permClass;
+                    switch(parseInt(permission)) {
+                        case 2:
+                            permClass = 'is-admin';
+                            break;
+                        case 1:
+                            permClass = 'is-mod';
+                            break;
+                    }
+
+                    chatArea.append(`<div id="msg_${username}_${timestamp}"><span class="${permClass}"><strong>${username}:</strong></span> ${message}</div>`);
             }
 
-            chatArea.append(`<div id="msg_${username}_${timestamp}"><span class="${permClass}"><strong>${username}:</strong></span> ${message}</div>`);
         }
     }
 

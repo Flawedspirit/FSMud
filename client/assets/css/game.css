@@ -8,7 +8,7 @@ body {
   border: var(--bs-border-width) solid var(--bs-border-color);
   border-radius: var(--bs-border-radius);
   display: block;
-  height: 300px;
+  height: 316px;
   overflow-y: scroll;
 }
 
@@ -28,6 +28,10 @@ body {
   content: url("/assets/images/admin-crown.png");
   margin-right: 8px;
   vertical-align: middle;
+}
+
+.server-message {
+  color: #fbc02d;
 }
 
 .table-transparent {
