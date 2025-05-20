@@ -32,66 +32,58 @@ module.exports = {
         }
     },
 
-    async getOnlinePlayers() {
+    async flushGameState() {
+        let query, updateResult;
+        const db = Database.getDatabase();
+        const onlinePlayers = Registry.get('players');
+
         try {
-            let account, character, skills;
+            if(!onlinePlayers || Object.keys(onlinePlayers).length === 0) return;
 
-            account = await Database.getAllRows(Config.get('database.names.auth_db'), 'account');
-
-            if(!account) {
-                return;
-            }
-
-            for(const acct of account) {
-                // Check if player is already loaded into memory and skip
-                // the player if it is, to avoid extra strain on the server
-                const player = Registry.get('players', acct.UUID);
-                if(player) continue;
-
-                // If the player is online in the database, load the rest of their data
-                if(acct.online) {
-                    character = await Database.get(Config.get('database.names.char_db'), 'character', 'UUID', acct.UUID);
-                    skills = await Database.get(Config.get('database.names.char_db'), 'character_skills', 'UUID', acct.UUID);
-
-                    if(!character || !skills) {
-                        return;
-                    }
-
-                    // Create a new player object and add to the registry of
-                    // players in server memory
-                    const currentChar = {
-                        id: acct.UUID,
-                        name: acct.username,
-                        race: Race.getRaceName(character.race),
-                        sex: character.sex,
-                        health: character.health,
-                        attributes: {
-                            strength: character.strength,
-                            vitality: character.vitality,
-                            agility: character.agility,
-                            willpower: character.willpower,
-                            perception: character.perception,
-                        },
-                        mapID: character.map_id,
-                        mapX: character.map_x,
-                        mapY: character.map_y,
-                        flags: character.flags,
-                        level: character.level,
-                        money: character.money,
-                        bank_money: character.banked_money,
-                        skills: {
-                            cooking: skills.cooking,
-                            herbalism: skills.herbalism,
-                            mining: skills.mining,
-                        },
-                        permissions: acct.permission
-                    };
-
-                    Registry.add('players', acct.UUID, currentChar);
-                }
+            for(const [playerID, playerData] of Object.entries(onlinePlayers)) {
+                query = `UPDATE \`${Config.get('database.names.char_db')}\`.\`character\`
+                    SET flags = ?,
+                    level = ?,
+                    xp = ?,
+                    money = ?,
+                    banked_money = ?,
+                    health = ?,
+                    current_health = ?,
+                    strength = ?,
+                    vitality = ?,
+                    agility = ?,
+                    willpower = ?,
+                    perception = ?,
+                    map_id = ?,
+                    map_x = ?,
+                    map_y = ?
+                    WHERE \`UUID\` = ?`;
+                updateResult = await new Promise((resolve, reject) => {
+                    db.query(query, [
+                        playerData.flags,
+                        playerData.level,
+                        playerData.xp,
+                        playerData.money,
+                        playerData.bank_money,
+                        playerData.health,
+                        playerData.current_health,
+                        playerData.attributes.strength,
+                        playerData.attributes.vitality,
+                        playerData.attributes.agility,
+                        playerData.attributes.willpower,
+                        playerData.attributes.perception,
+                        playerData.mapID,
+                        playerData.mapX,
+                        playerData.mapY,
+                        playerID
+                    ], (err, result) => {
+                        if(err) return reject(err);
+                        resolve(result);
+                    });
+                });
             }
         } catch(err) {
-            Log.message(`Error getting online player list: ${err.message}`, 'ERROR');
+            Log.message(`Error flushing character data to database: ${err.message}`, 'ERROR');
         }
     }
 }

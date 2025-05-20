@@ -62,7 +62,7 @@ module.exports = {
             race = 0;
         }
 
-        let health, strength, vitality, agility, willpower, perception;
+        let health, currentHealth, strength, vitality, agility, willpower, perception;
         switch(parseInt(race)) {
             case 0: // Human
                 strength = 11;
@@ -121,6 +121,7 @@ module.exports = {
                 perception = 11;
         }
         health = vitality * parseInt(Config.get('game_options.vitality_hp_multiplier'));
+        currentHealth = health;
 
         // Sex
         if(sex) {
@@ -160,10 +161,10 @@ module.exports = {
             });
 
             query = `INSERT INTO \`${Config.get('database.names.char_db')}\`.\`character\`
-                (UUID, race, sex, health, strength, vitality, agility, willpower, perception)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                (UUID, race, sex, health, current_health, strength, vitality, agility, willpower, perception)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
             updateResult = await new Promise((resolve, reject) => {
-                db.query(query, [uuid, race, sex, health, strength, vitality, agility, willpower, perception], (err, result) => {
+                db.query(query, [uuid, race, sex, health, currentHealth, strength, vitality, agility, willpower, perception], (err, result) => {
                     if(err) return reject(err);
                     resolve(result);
                 });
@@ -256,131 +257,132 @@ module.exports = {
         const currentTime = Math.round(Date.now() / 1000);
 
         try {
-            if(message.type === 'LOGIN') {
-                let account;
+            let account;
 
-                // Check user information against database
-                account = await Database.get(`${Config.get('database.names.auth_db')}`, 'account', 'username', message.data.username);
+            // Check user information against database
+            account = await Database.get(`${Config.get('database.names.auth_db')}`, 'account', 'username', message.data.username);
 
-                if(!account) {
-                    return new Packet('REPLY', { success: false, message: [] });
+            if(!account) {
+                return new Packet('REPLY', { success: false, message: [] });
+            }
+
+            // Check if account is banned
+            const isBanned = await Database.get(`${Config.get('database.names.auth_db')}`, 'account_bans', 'UUID', account.UUID);
+            const isIPBanned = await Database.get(`${Config.get('database.names.auth_db')}`, 'ip_bans', 'ip', message.data.ipAddress);
+
+            if(isBanned && parseInt(isBanned.ban_time) !== 0) {
+                Log.message(`Login attempt by ${account.username}@${message.data.ipAddress} rejected. Reason: BANNED`, 'AUTH');
+
+                if(isBanned.ban_reason === 'THROTTLED') {
+                    return new Packet('REPLY', { success: false, message: ['ACCOUNT_THROTTLED', isBanned.ban_time - currentTime] });
+                } else {
+                    return new Packet('REPLY', { success: false, message: ['ACCOUNT_LOCKED'] });
                 }
+            }
 
-                // Check if account is banned
-                const isBanned = await Database.get(`${Config.get('database.names.auth_db')}`, 'account_bans', 'UUID', account.UUID);
-                const isIPBanned = await Database.get(`${Config.get('database.names.auth_db')}`, 'ip_bans', 'ip', message.data.ipAddress);
+            if(isIPBanned && isIPBanned.ip === message.data.ipAddress) {
+                Log.message(`Login attempt by ${account.username}@${message.data.ipAddress} rejected. Reason: IP BANNED`, 'AUTH');
+                return new Packet('REPLY', { success: false, message: ['IP_LOCKED'] });
+            }
 
-                if(isBanned && parseInt(isBanned.ban_time) !== 0) {
-                    Log.message(`Login attempt by ${account.username}@${message.data.ipAddress} rejected. Reason: BANNED`, 'AUTH');
+            // No outstanding bans, proceed with login
+            if(account.username.toLowerCase() === message.data.username.toLowerCase()) {
+                Log.message(`Login attempt by ${account.username}@${message.data.ipAddress}.`, 'AUTH');
+                try {
+                    let query, updateResult;
 
-                    if(isBanned.ban_reason === 'THROTTLED') {
-                        return new Packet('REPLY', { success: false, message: ['ACCOUNT_THROTTLED', isBanned.ban_time - currentTime] });
-                    } else {
-                        return new Packet('REPLY', { success: false, message: ['ACCOUNT_LOCKED'] });
-                    }
-                }
+                    // Update last attempted login IP address
+                    query = `UPDATE \`${Config.get('database.names.auth_db')}\`.\`account\` SET last_attempt_ip = ? WHERE \`username\` = ?`;
+                    updateResult = await new Promise((resolve, reject) => {
+                        db.query(query, [message.data.ipAddress, account.username], (err, result) => {
+                            if(err) return reject(err);
+                            resolve(result);
+                        });
+                    });
 
-                if(isIPBanned && isIPBanned.ip === message.data.ipAddress) {
-                    Log.message(`Login attempt by ${account.username}@${message.data.ipAddress} rejected. Reason: IP BANNED`, 'AUTH');
-                    return new Packet('REPLY', { success: false, message: ['IP_LOCKED'] });
-                }
-
-                // No outstanding bans, proceed with login
-                if(account.username.toLowerCase() === message.data.username.toLowerCase()) {
-                    Log.message(`Login attempt by ${account.username}@${message.data.ipAddress}.`, 'AUTH');
-                    try {
-                        let query, updateResult;
-
-                        // Update last attempted login IP address
-                        query = `UPDATE \`${Config.get('database.names.auth_db')}\`.\`account\` SET last_attempt_ip = ? WHERE \`username\` = ?`;
+                    const comparePasswd = await bcrypt.compare(message.data.password, account.password);
+                    if(comparePasswd) {
+                        // Successfully authenticated. Welcome!
+                        // Update database with data passed from login screen
+                        query = `UPDATE \`${Config.get('database.names.auth_db')}\`.\`account\` SET last_ip = ?, last_login = ?, failed_logins = ?, online = ?, locale = ? WHERE \`username\` = ?`;
                         updateResult = await new Promise((resolve, reject) => {
-                            db.query(query, [message.data.ipAddress, account.username], (err, result) => {
+                            // Convert Unix date returned by login form to a data format mysql will accept
+                            const date = new Date(message.timestamp).toISOString().slice(0, 19).replace('T', ' ');
+                            db.query(query, [message.data.ipAddress, date, 0, 1, message.data.locale, account.username], (err, result) => {
                                 if(err) return reject(err);
                                 resolve(result);
                             });
                         });
 
-                        const comparePasswd = await bcrypt.compare(message.data.password, account.password);
-                        if(comparePasswd) {
-                            // Successfully authenticated. Welcome!
-                            // Update database with data passed from login screen
-                            query = `UPDATE \`${Config.get('database.names.auth_db')}\`.\`account\` SET last_ip = ?, last_login = ?, failed_logins = ?, online = ?, locale = ? WHERE \`username\` = ?`;
-                            updateResult = await new Promise((resolve, reject) => {
-                                // Convert Unix date returned by login form to a data format mysql will accept
-                                const date = new Date(message.timestamp).toISOString().slice(0, 19).replace('T', ' ');
-                                db.query(query, [message.data.ipAddress, date, 0, 1, message.data.locale, account.username], (err, result) => {
-                                    if(err) return reject(err);
-                                    resolve(result);
-                                });
+                        // Generate a session key and send it to the client and database
+                        const sessionKey = await SessionKey.newKey();
+                        query = `UPDATE \`${Config.get('database.names.auth_db')}\`.\`account\` SET session_key = ? WHERE \`username\` = ?`;
+                        updateResult = await new Promise((resolve, reject) => {
+                            db.query(query, [sessionKey, account.username], (err, result) => {
+                                if(err) return reject(err);
+                                resolve(result);
                             });
+                        });
 
-                            // Generate a session key and send it to the client and database
-                            const sessionKey = await SessionKey.newKey();
-                            query = `UPDATE \`${Config.get('database.names.auth_db')}\`.\`account\` SET session_key = ? WHERE \`username\` = ?`;
-                            updateResult = await new Promise((resolve, reject) => {
-                                db.query(query, [sessionKey, account.username], (err, result) => {
-                                    if(err) return reject(err);
-                                    resolve(result);
-                                });
-                            });
-
-                            // Send initial character state to the player when logged in
-                            const character = await Database.get(Config.get('database.names.char_db'), 'character', 'UUID', account.UUID);
-                            const skills = await Database.get(Config.get('database.names.char_db'), 'character_skills', 'UUID', account.UUID);
-                            const gameState = {
-                                id: account.UUID,
-                                name: account.username,
-                                race: Race.getRaceName(character.race),
-                                sex: character.sex,
-                                health: character.health,
-                                attributes: {
-                                    strength: character.strength,
-                                    vitality: character.vitality,
-                                    agility: character.agility,
-                                    willpower: character.willpower,
-                                    perception: character.perception
-                                },
-                                mapID: character.map_id,
-                                mapX: character.map_x,
-                                mapY: character.map_y,
-                                flags: character.flags,
-                                level: character.level,
-                                money: character.money,
-                                bank_money: character.banked_money,
-                                skills: {
-                                    cooking: skills.cooking,
-                                    herbalism: skills.herbalism,
-                                    mining: skills.mining,
-                                },
-                                permissions: account.permission
-                            }
-                            return new Packet('REPLY', { success: true, message: [sessionKey, gameState] });
-                        } else {
-                            // Check if there are already enough invalid login attempts to ban logins
-                            // The threshold value is actually set to n-1 because failed_logins begins at 0
-                            if(account.failed_logins >= Config.get('auth.wrong_pass.max_count') - 1) {
-                                this.banAccount(account.UUID, currentTime + Config.get('auth.wrong_pass.ban_time'), 'THROTTLED', 'Server');
-                                return new Packet('REPLY', { success: false, message: ['TOO_MANY_LOGINS'] });
-                            } else {
-                                // Password was incorrect, increment failed logins by 1
-                                query = `UPDATE \`${Config.get('database.names.auth_db')}\`.\`account\` SET failed_logins = ? WHERE \`username\` = ?`;
-                                updateResult = await new Promise((resolve, reject) => {
-                                    db.query(query, [account.failed_logins + 1, account.username], (err, result) => {
-                                        if(err) return reject(err);
-                                        resolve(result);
-                                    });
-                                });
-                                return new Packet('REPLY', { success: false, message: ['INVALID_CREDENTIALS'] });
-                            }
+                        // Send initial character state to the player when logged in
+                        const character = await Database.get(Config.get('database.names.char_db'), 'character', 'UUID', account.UUID);
+                        const skills = await Database.get(Config.get('database.names.char_db'), 'character_skills', 'UUID', account.UUID);
+                        const gameState = {
+                            id: account.UUID,
+                            name: account.username,
+                            race: Race.getRaceName(character.race),
+                            sex: character.sex,
+                            health: character.health,
+                            current_health: character.current_health,
+                            attributes: {
+                                strength: character.strength,
+                                vitality: character.vitality,
+                                agility: character.agility,
+                                willpower: character.willpower,
+                                perception: character.perception
+                            },
+                            mapID: character.map_id,
+                            mapX: character.map_x,
+                            mapY: character.map_y,
+                            flags: character.flags,
+                            level: character.level,
+                            xp: character.xp,
+                            money: character.money,
+                            bank_money: character.banked_money,
+                            skills: {
+                                cooking: skills.cooking,
+                                herbalism: skills.herbalism,
+                                mining: skills.mining,
+                            },
+                            permissions: account.permission
                         }
-                    } catch(err) {
-                        Log.message(`Database update failed: ${err.message}`, 'ERROR');
-                        return new Packet('REPLY', { success: false, message: ['SERVER_ERROR'] });
+                        Registry.add('players', account.UUID, gameState);
+                        return new Packet('REPLY', { success: true, message: [sessionKey, gameState] });
+                    } else {
+                        // Check if there are already enough invalid login attempts to ban logins
+                        // The threshold value is actually set to n-1 because failed_logins begins at 0
+                        if(account.failed_logins >= Config.get('auth.wrong_pass.max_count') - 1) {
+                            this.banAccount(account.UUID, currentTime + Config.get('auth.wrong_pass.ban_time'), 'THROTTLED', 'Server');
+                            return new Packet('REPLY', { success: false, message: ['TOO_MANY_LOGINS'] });
+                        } else {
+                            // Password was incorrect, increment failed logins by 1
+                            query = `UPDATE \`${Config.get('database.names.auth_db')}\`.\`account\` SET failed_logins = ? WHERE \`username\` = ?`;
+                            updateResult = await new Promise((resolve, reject) => {
+                                db.query(query, [account.failed_logins + 1, account.username], (err, result) => {
+                                    if(err) return reject(err);
+                                    resolve(result);
+                                });
+                            });
+                            return new Packet('REPLY', { success: false, message: ['INVALID_CREDENTIALS'] });
+                        }
                     }
-                } else {
-                    // The requested username was not found in the database
-                    return new Packet('REPLY', { success: false, message: ['INVALID_CREDENTIALS'] });
+                } catch(err) {
+                    Log.message(`Database update failed: ${err.message}`, 'ERROR');
+                    return new Packet('REPLY', { success: false, message: ['SERVER_ERROR'] });
                 }
+            } else {
+                // The requested username was not found in the database
+                return new Packet('REPLY', { success: false, message: ['INVALID_CREDENTIALS'] });
             }
         } catch(err) {
             Log.message(`Failed to parse login data: ${err.message}`, 'ERROR');
@@ -389,12 +391,12 @@ module.exports = {
     },
 
     async logout(message) {
-        const db = Database.getDatabase();
-
         try {
-            if(message.type === 'LOGOUT') {
-                result = await Database.get(`${Config.get('database.names.auth_db')}`, 'account', 'username', message.data.username);
-            }
+            const account = await Database.get(`${Config.get('database.names.auth_db')}`, 'account', 'session_key', message.data.sessionKey);
+
+            Database.updateRow(Config.get('database.names.auth_db'), 'account', 'UUID', account.UUID, 'online', 0);
+            Database.updateRow(Config.get('database.names.auth_db'), 'account', 'UUID', account.UUID, 'session_key', '');
+            Registry.remove('players', account.UUID);
         } catch(err) {
             Log.message(`Failed to parse logout data: ${err.message}`, 'ERROR');
         }

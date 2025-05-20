@@ -2,6 +2,7 @@ const readline = require('readline');
 const WebSocket = require('ws');
 const Packet = require('./packet.js');
 const Chat = require('./chat.js');
+const Command = require('./commands');
 const ServerTick = require('./serverTick.js');
 const { Errors, Log } = baseRequire('server/core/tools');
 const Config = baseRequire('server/core/config');
@@ -17,7 +18,7 @@ global.line = readline.createInterface({
 });
 
 // Main server object
-let server;
+let server, mainTick, dbTick;
 
 // Event handling
 Event.on('PLAYER_CONNECTED', async (data, socket) => {
@@ -30,17 +31,73 @@ Event.on('PLAYER_DISCONNECTED', async (data) => {
 });
 
 Event.on('SERVER_READY', () => {
-    setInterval(async () => {
-        // Load online players into server memory
-        ServerTick.getOnlinePlayers();
+    const tickRateSeconds = 2;
+
+    mainTick = setInterval(async () => {
+        // Update played time of all logged in accounts
+        account = await Database.getAllRows(Config.get('database.names.auth_db'), 'account');
+        if(account) {
+            for(const acct of account) {
+                // Update time played
+                if(parseInt(acct.online) === 1) {
+                    Database.updateRow(Config.get('database.names.auth_db'), 'account', 'UUID', acct.UUID, 'played_time', acct.played_time + tickRateSeconds);
+                }
+            }
+        }
 
         // Clear expired bans and mutes
         ServerTick.clearExpiredModActions();
-    }, 2000);
+    }, tickRateSeconds * 1000);
+
+    dbTick = setInterval(async () => {
+        //console.log('Flushing game state to database.');
+        ServerTick.flushGameState();
+    }, 10000);
 });
 
 Event.on('PLAYER_MESSAGE', async (data, socket) => {
     Chat.processMessage(data, socket, server);
+});
+
+Event.on('SAVE', async () => {
+    ServerTick.flushGameState();
+});
+
+process.on('SIGINT', async () => {
+    const onlinePlayers = Registry.get('players');
+    try {
+        if(Object.keys(onlinePlayers).length > 0) {
+            for(const [playerID, _] of Object.entries(onlinePlayers)) {
+                await Database.updateRow(Config.get('database.names.auth_db'), 'account', 'UUID', playerID, 'online', 0);
+                await Database.updateRow(Config.get('database.names.auth_db'), 'account', 'UUID', playerID, 'session_key', '');
+            }
+        }
+    } catch(err) {
+        Log.message(`Database update failed: ${err.message}`, 'ERROR');
+    }
+
+    // Stop server ticking
+    clearInterval(mainTick);
+    clearInterval(dbTick);
+    Log.message('Stopping server tick.', 'INFO');
+
+    // Clean up event listeners
+    if(global.line) {
+        global.line.close();
+        Log.message('Event listeners stopped.', 'INFO');
+    }
+
+    // Close the database connections
+    Database.close();
+
+    if(server) {
+        server.close(() => {
+            Log.message('WebSocket connections closed.');
+        })
+    }
+
+    Log.message('Server has been closed. Good day!', 'INFO');
+    process.exit(0);
 });
 
 module.exports = {
@@ -86,7 +143,7 @@ module.exports = {
                 });
 
                 socket.on('close', () => {
-                    //Log.message(Lang.getString('server.client_close'), 'INFO');
+                    // PLACEHOLDER
                 });
             });
 
@@ -100,12 +157,9 @@ module.exports = {
 
     close() {
         if(server) {
-            server.close(() => {
-                Log.message('Server going down NOW. Flushing state to database.', 'INFO');
-                Event.call('SAVE');
-                Log.message('Server has been closed. Good day!', 'INFO');
-                process.exit(0);
-            });
+            Log.message('Server going down NOW. Flushing state to database.', 'INFO');
+            Event.call('SAVE');
+            process.kill(process.pid, 'SIGINT');
         } else {
             Log.message('Server is not running or has already closed.', 'WARN');
         }
@@ -115,39 +169,7 @@ module.exports = {
         global.line.prompt();
 
         global.line.on('line', async (input) => {
-            try {
-                // Split inputted command into its base command and constituent subcommands
-                // Base command is passed to the registry to find command file while
-                // full command string is passed to command file for further processing
-                const tokens = input.split(' ').filter(token => token.trim() !== '');
-                let baseCommand;
-
-                if(tokens.length === 1) {
-                    baseCommand = tokens[0];
-                } else {
-                    baseCommand = `${tokens[0]} ${tokens[1]}`;
-                }
-
-                const dbCommand = await Database.get(Config.get('database.names.world_db'), 'command', 'name', baseCommand);
-
-                if(!dbCommand || baseCommand !== dbCommand.name) {
-                    Log.message(`The command [c:w]${input}[c:C] does not exist.`, 'INFO');
-                    return
-                }
-
-                // The command exists and is valid, process here
-                // TODO: validate permissions
-
-                const command = Registry.get('commands').find(cmd => cmd.name === tokens[0]);
-
-                if(command && typeof command.execute === 'function') {
-                    await command.execute(input);
-                } else {
-                    Log.message(`The command [c:w]${input}[c:C] does not exist.`, 'INFO');
-                }
-            } catch(err) {
-                Log.message(`Error: ${err.stack}`, 'ERROR');
-            }
+            Command.processCommand('console', input);
 
             global.line.prompt();
         });
