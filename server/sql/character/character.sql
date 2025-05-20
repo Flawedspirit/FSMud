@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS `character` (
     `money` int unsigned NOT NULL DEFAULT '0',
     `banked_money` int unsigned NOT NULL DEFAULT '0',
     `health` int unsigned NOT NULL DEFAULT '0',
+    `current_health` int unsigned NOT NULL DEFAULT '0',
     `strength` smallint unsigned NOT NULL DEFAULT '0',
     `vitality` smallint unsigned NOT NULL DEFAULT '0',
     `agility` smallint unsigned NOT NULL DEFAULT '0',
