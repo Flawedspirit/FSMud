@@ -18,7 +18,7 @@ global.line = readline.createInterface({
 });
 
 // Main server object
-let server, mainTick, dbTick;
+let server, socket, mainTick, dbTick;
 
 // Event handling
 Event.on('PLAYER_CONNECTED', async (data, socket) => {
@@ -46,12 +46,12 @@ Event.on('SERVER_READY', () => {
         }
 
         // Clear expired bans and mutes
-        ServerTick.clearExpiredModActions();
+        await ServerTick.clearExpiredModActions();
     }, tickRateSeconds * 1000);
 
     dbTick = setInterval(async () => {
         //console.log('Flushing game state to database.');
-        ServerTick.flushGameState();
+        await ServerTick.flushGameState();
     }, 10000);
 });
 
@@ -64,6 +64,7 @@ Event.on('SAVE', async () => {
 });
 
 process.on('SIGINT', async () => {
+    // Iterate through all online players and set them offline in the database
     const onlinePlayers = Registry.get('players');
     try {
         if(Object.keys(onlinePlayers).length > 0) {
@@ -90,11 +91,8 @@ process.on('SIGINT', async () => {
     // Close the database connections
     Database.close();
 
-    if(server) {
-        server.close(() => {
-            Log.message('WebSocket connections closed.');
-        })
-    }
+    Log.message('WebSocket connections closed.');
+    server.close();
 
     Log.message('Server has been closed. Good day!', 'INFO');
     process.exit(0);
@@ -169,7 +167,7 @@ module.exports = {
         global.line.prompt();
 
         global.line.on('line', async (input) => {
-            Command.processCommand('console', input);
+            Command.processCommand(socket, 'console', input);
 
             global.line.prompt();
         });

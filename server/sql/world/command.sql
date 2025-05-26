@@ -12,8 +12,9 @@ INSERT INTO `command` VALUES
 ('account create', 3),
 ('account delete', 3),
 ('account uuid', 1),
+('played', 0),
 ('server', 2),
-('server close', 2),
+('server close', 3),
 ('server memory', 2),
 ('server version', 2);
 UNLOCK TABLES;

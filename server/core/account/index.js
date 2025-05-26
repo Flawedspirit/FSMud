@@ -292,33 +292,20 @@ module.exports = {
                     let query, updateResult;
 
                     // Update last attempted login IP address
-                    query = `UPDATE \`${Config.get('database.names.auth_db')}\`.\`account\` SET last_attempt_ip = ? WHERE \`username\` = ?`;
-                    updateResult = await new Promise((resolve, reject) => {
-                        db.query(query, [message.data.ipAddress, account.username], (err, result) => {
-                            if(err) return reject(err);
-                            resolve(result);
-                        });
-                    });
+                    await Database.updateRow(Config.get('database.names.auth_db'), 'account', 'UUID', account.UUID, 'last_attempt_ip', message.data.ipAddress);
 
+                    // Create a new session key
+                    const sessionKey = await SessionKey.newKey();
                     const comparePasswd = await bcrypt.compare(message.data.password, account.password);
                     if(comparePasswd) {
                         // Successfully authenticated. Welcome!
                         // Update database with data passed from login screen
-                        query = `UPDATE \`${Config.get('database.names.auth_db')}\`.\`account\` SET last_ip = ?, last_login = ?, failed_logins = ?, online = ?, locale = ? WHERE \`username\` = ?`;
+                        query = `UPDATE \`${Config.get('database.names.auth_db')}\`.\`account\` SET session_key = ?, last_ip = ?, last_login = ?, failed_logins = ?, online = ?, locale = ? WHERE \`username\` = ?`;
                         updateResult = await new Promise((resolve, reject) => {
+
                             // Convert Unix date returned by login form to a data format mysql will accept
                             const date = new Date(message.timestamp).toISOString().slice(0, 19).replace('T', ' ');
-                            db.query(query, [message.data.ipAddress, date, 0, 1, message.data.locale, account.username], (err, result) => {
-                                if(err) return reject(err);
-                                resolve(result);
-                            });
-                        });
-
-                        // Generate a session key and send it to the client and database
-                        const sessionKey = await SessionKey.newKey();
-                        query = `UPDATE \`${Config.get('database.names.auth_db')}\`.\`account\` SET session_key = ? WHERE \`username\` = ?`;
-                        updateResult = await new Promise((resolve, reject) => {
-                            db.query(query, [sessionKey, account.username], (err, result) => {
+                            db.query(query, [sessionKey, message.data.ipAddress, date, 0, 1, message.data.locale, account.username], (err, result) => {
                                 if(err) return reject(err);
                                 resolve(result);
                             });
@@ -366,18 +353,12 @@ module.exports = {
                             return new Packet('REPLY', { success: false, message: ['TOO_MANY_LOGINS'] });
                         } else {
                             // Password was incorrect, increment failed logins by 1
-                            query = `UPDATE \`${Config.get('database.names.auth_db')}\`.\`account\` SET failed_logins = ? WHERE \`username\` = ?`;
-                            updateResult = await new Promise((resolve, reject) => {
-                                db.query(query, [account.failed_logins + 1, account.username], (err, result) => {
-                                    if(err) return reject(err);
-                                    resolve(result);
-                                });
-                            });
+                            await Database.updateRow(Config.get('database.names.auth_db'), 'account', 'UUID', account.UUID, 'failed_logins', account.failed_logins + 1);
                             return new Packet('REPLY', { success: false, message: ['INVALID_CREDENTIALS'] });
                         }
                     }
                 } catch(err) {
-                    Log.message(`Database update failed: ${err.message}`, 'ERROR');
+                    Log.message(`Database update failed: ${err.stack}`, 'ERROR');
                     return new Packet('REPLY', { success: false, message: ['SERVER_ERROR'] });
                 }
             } else {
