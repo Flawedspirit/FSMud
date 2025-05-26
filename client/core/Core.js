@@ -1,6 +1,7 @@
 window.config = new Config();
 
 async function connect() {
+    console.log('Connecting...');
     window.gameSocket = new WebSocket(`ws://${await config.get('host')}:${await config.get('port')}`);
 
     gameSocket.onopen = () => {

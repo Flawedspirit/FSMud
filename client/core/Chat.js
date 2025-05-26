@@ -10,7 +10,7 @@ $(document).on('SOCKET_READY', () => {
             const timestamp = data.timestamp;
             let message = data.data.message;
 
-            message = message.replace(/(?:\r\n|\r|\n)/g, '<br>');
+            if(message) message = message.replace(/(?:\r\n|\r|\n)/g, '<br>');
 
             switch(data.type) {
                 case 'COMMAND_REPLY':

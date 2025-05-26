@@ -1,4 +1,5 @@
-$('#login').on('submit', async (event) => {
+$(document).on('submit', '#login', async (event) => {
+    console.log('Login submitted');
     event.preventDefault();
 
     const username = $('#login-user').val();
@@ -42,5 +43,9 @@ $('#login').on('submit', async (event) => {
                 $('#login_messages').append('<p class="mb-0">Unable to log in. Please check that your username and password are correct.</p>');
             }
         }
+    }
+
+    gameSocket.onerror = (event) => {
+        console.log(event.data);
     }
 });
