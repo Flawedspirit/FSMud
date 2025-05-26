@@ -1,5 +1,6 @@
 const data = {
-    commands: [],
+    admin_commands: [],
+    player_commands: [],
     players: []
 };
 

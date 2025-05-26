@@ -14,12 +14,11 @@ module.exports = {
 
             // Check if message is a command
             if(chatMsg.substring(0, 1) === '/' || chatMsg.substring(0, 1) === '.') {
-                const command = chatMsg.substring(1);
-                Command.processCommand(socket, command);
+                Command.processCommand(socket, sender, chatMsg);
             } else {
                 server.clients.forEach((client) => {
                     if(client.readyState === WebSocket.OPEN) {
-                        const response = new Packet('CHAT_REPLY', {username: sender.name, permission: sender.permissions, message: chatMsg}, Date.now()).toJSON();
+                        const response = new Packet('CHAT_REPLY', {username: sender.name, permission: sender.permissions, message: Command.sanitize(chatMsg)}, Date.now()).toJSON();
                         client.send(response);
                     }
                 });
